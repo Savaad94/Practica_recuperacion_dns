@@ -324,3 +324,106 @@ dig @192.168.56.11 google.com
 ```
 
 Si obtenemos una respuesta con una dirección IP en la ANSWER SECTION, significa que ceo ha reenviado la consulta a Cloudflare (1.1.1.1) y ha recibido una respuesta válida.
+
+# 6. Crear los registros necesarios en la zona directa e inversa
+En este paso, añadimos los registros DNS para los servidores y equipos de la red en la zona directa e inversa.
+
+## 6.1 Añadir registros en la zona directa (db.olimpo)
+Editamos el archivo de la zona directa en atlas:
+
+```bash
+sudo nano /etc/bind/db.olimpo
+```
+
+Añadimos los registros A para los dispositivos de la red:
+
+```bash
+$TTL 86400
+@   IN  SOA atlas. hefestos.olimpo.test. (
+        3        ; Serial
+        1200     ; Refresh (20 min)
+        900      ; Retry (15 min)
+        2419200  ; Expire
+        86400    ; Negative Cache TTL
+)
+
+; Servidores de nombres
+@   IN  NS  atlas.olimpo.test.
+
+; Registros A (asociación de nombres a IPs)
+atlas   IN  A   192.168.56.10
+ceo     IN  A   192.168.56.11
+atenea  IN  A   192.168.56.20
+mercurio IN  A   192.168.56.30
+ares    IN  A   192.168.56.40
+dionisio IN  A   192.168.56.50
+```
+
+Guardamos y cerramos.
+
+## 6.2 Añadir registros en la zona inversa (db.olimpo.rev)
+Editamos el archivo de la zona inversa en atlas:
+
+```bash
+sudo nano /etc/bind/db.olimpo.rev
+```
+
+Añadimos los registros PTR para la resolución inversa:
+
+```bash
+$TTL 86400
+@   IN  SOA atlas. hefestos.olimpo.test. (
+        3        ; Serial
+        1200     ; Refresh (20 min)
+        900      ; Retry (15 min)
+        2419200  ; Expire
+        86400    ; Negative Cache TTL
+)
+
+; Servidores de nombres
+@   IN  NS  atlas.olimpo.test.
+
+; Registros PTR (IP a nombre)
+10  IN  PTR atlas.olimpo.test.
+11  IN  PTR ceo.olimpo.test.
+20  IN  PTR atenea.olimpo.test.
+30  IN  PTR mercurio.olimpo.test.
+40  IN  PTR ares.olimpo.test.
+50  IN  PTR dionisio.olimpo.test.
+```
+
+Guardamos y cerramos.
+
+## 6.3 Reiniciar BIND en atlas y verificar
+Después de actualizar los archivos, aumentamos el número de serie y reiniciamos el servicio en atlas:
+
+```bash
+sudo systemctl restart bind9
+```
+
+Verificamos que la configuración es válida con:
+
+```bash
+sudo named-checkzone olimpo.test /etc/bind/db.olimpo
+sudo named-checkzone 56.168.192.in-addr.arpa /etc/bind/db.olimpo.rev
+```
+
+Si no hay errores, pasamos al siguiente paso.
+
+## 6.4 Forzar la actualización en ceo
+Para asegurarnos de que ceo recibe la nueva configuración, ejecutamos en ceo:
+
+```bash
+sudo rndc retransfer olimpo.test
+sudo rndc reload
+```
+
+Verificamos la resolución de los nuevos registros con:
+
+```bash
+dig @192.168.56.11 atenea.olimpo.test
+dig @192.168.56.11 -x 192.168.56.20
+```
+
+Si la respuesta es correcta, significa que la transferencia de zona ha funcionado.
+

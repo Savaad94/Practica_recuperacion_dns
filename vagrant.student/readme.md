@@ -494,3 +494,73 @@ dig @192.168.56.11 www.olimpo.test
 ```
 
 Si obtenemos respuestas válidas, los alias se han configurado correctamente. 
+
+# 8. Añadir los registros de los servidores de correo
+En este paso, configuramos los registros MX (Mail Exchange) para definir los servidores de correo de olimpo.test.
+
+mercurio.olimpo.test será el servidor principal con prioridad 10.
+dionisio.olimpo.test será el servidor de respaldo con prioridad 20.
+
+Cuanto menor es el número de prioridad, mayor será la preferencia del servidor para recibir correos.
+
+## 8.1 Añadir los registros MX en atlas
+Editamos la zona directa en atlas:
+
+```bash
+sudo nano /etc/bind/db.olimpo
+```
+
+Añadimos los registros MX debajo de los registros existentes:
+
+```bash
+; Servidores de correo (MX)
+@       IN  MX  10 mercurio.olimpo.test.
+@       IN  MX  20 dionisio.olimpo.test.
+```
+
+Guardamos y cerramos.
+
+## 8.2 Actualizar el número de serie y reiniciar BIND
+Aumentamos el número de serie para que ceo detecte la actualización:
+
+```bash
+sudo nano /etc/bind/db.olimpo
+```
+
+Modificamos la línea del SOA:
+
+```bash
+@   IN  SOA atlas. hefestos.olimpo.test. (
+        6        ; Serial
+```
+
+Guardamos y cerramos.
+
+Reiniciamos BIND en atlas:
+
+```bash
+sudo systemctl restart bind9
+```
+
+Verificamos que la configuración sea válida:
+
+```bash
+sudo named-checkzone olimpo.test /etc/bind/db.olimpo
+```
+
+Si no hay errores, pasamos a ceo.
+
+## 8.3 Forzar la actualización en ceo
+Para que ceo reciba los registros MX, ejecutamos:
+
+```bash
+sudo rndc retransfer olimpo.test
+sudo rndc reload
+```
+
+Comprobamos que los registros se han propagado correctamente:
+
+```bash
+dig @192.168.56.11 MX olimpo.test
+```
+Si la respuesta muestra los servidores con sus prioridades correctamente, la configuración ha sido exitosa. 

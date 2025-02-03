@@ -427,3 +427,70 @@ dig @192.168.56.11 -x 192.168.56.20
 
 Si la respuesta es correcta, significa que la transferencia de zona ha funcionado.
 
+# 7. Crear alias (CNAME) en la zona directa
+En este paso, añadimos alias a ciertos equipos mediante registros CNAME. Estos alias permiten referirse a servicios con nombres más amigables dentro del dominio olimpo.test.
+
+## 7.1 Añadir registros CNAME en atlas
+Editamos el archivo de la zona directa en atlas:
+
+```bash
+sudo nano /etc/bind/db.olimpo
+```
+
+Añadimos los alias al final del archivo:
+
+```bash
+; Alias (CNAME)
+ftp     IN  CNAME atenea.olimpo.test.
+smtp    IN  CNAME mercurio.olimpo.test.
+pop     IN  CNAME mercurio.olimpo.test.
+www     IN  CNAME ares.olimpo.test.
+```
+
+Guardamos y cerramos.
+
+Nota: Es normal tener más de un alias apuntando al mismo equipo, como es el caso de smtp y pop para mercurio.olimpo.test, ya que un mismo servidor puede manejar múltiples servicios, como el envío y recepción de correos.
+
+## 7.2 Actualizar el número de serie y reiniciar BIND
+Para asegurar que los cambios sean replicados, incrementamos el número de serie en el archivo de zona:
+
+```bash
+sudo nano /etc/bind/db.olimpo
+```
+
+Modificamos el número de serie en el SOA:
+
+```bash
+@   IN  SOA atlas. hefestos.olimpo.test. (
+        4        ; Serial
+```
+
+Guardamos y reiniciamos BIND en atlas:
+
+```bash
+sudo systemctl restart bind9
+```
+
+Verificamos que no haya errores:
+
+```bash
+sudo named-checkzone olimpo.test /etc/bind/db.olimpo
+```
+
+## 7.3 Forzar la actualización en ceo
+Para que ceo reciba los nuevos alias, ejecutamos:
+
+```bash
+sudo rndc retransfer olimpo.test
+sudo rndc reload
+```
+
+Verificamos que los alias funcionan correctamente:
+
+```bash
+dig @192.168.56.11 ftp.olimpo.test
+dig @192.168.56.11 smtp.olimpo.test
+dig @192.168.56.11 www.olimpo.test
+```
+
+Si obtenemos respuestas válidas, los alias se han configurado correctamente. 

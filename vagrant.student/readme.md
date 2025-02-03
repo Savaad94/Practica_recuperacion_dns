@@ -270,3 +270,57 @@ dig @192.168.56.11 SOA olimpo.test
 ```
 
 Si el número de serie mostrado coincide con el de atlas, la configuración se ha aplicado correctamente.
+
+# 5. Configurar los reenviadores de los servidores DNS
+En este paso, configuramos los reenviadores en atlas y ceo, para que cuando no puedan resolver una consulta internamente, la envíen al servidor DNS de Cloudflare (1.1.1.1).
+
+## 5.1 Modificar named.conf.options en atlas y ceo
+Abrimos el archivo en atlas:
+
+```bash
+sudo nano /etc/bind/named.conf.options
+```
+
+Y añadimos la configuración de los reenviadores dentro del bloque options {}:
+
+```bash
+options {
+    directory "/var/cache/bind";
+
+    // Habilitar reenviadores
+    forwarders {
+        1.1.1.1;
+    };
+
+    dnssec-validation no;
+
+    listen-on-v6 { any; };
+};
+```
+
+Hacemos lo mismo en ceo:
+
+```bash
+sudo nano /etc/bind/named.conf.options
+```
+
+Y agregamos la misma configuración.
+
+## 5.2 Reiniciar BIND en atlas y ceo
+Para aplicar los cambios, reiniciamos el servicio en ambos servidores:
+
+```bash
+sudo systemctl restart bind9
+sudo systemctl status bind9
+```
+
+Si el servicio está activo y sin errores, significa que la configuración ha sido aplicada correctamente.
+
+## 5.3 Comprobar la resolución de nombres
+Para verificar que los reenviadores funcionan, probamos a resolver un dominio externo desde ceo:
+
+```bash
+dig @192.168.56.11 google.com
+```
+
+Si obtenemos una respuesta con una dirección IP en la ANSWER SECTION, significa que ceo ha reenviado la consulta a Cloudflare (1.1.1.1) y ha recibido una respuesta válida.

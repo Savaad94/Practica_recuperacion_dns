@@ -1,0 +1,13 @@
+;
+; olimpo.test
+;
+$TTL	86400
+@	IN	SOA	localhost. foo.localhost. (
+			      1		; Serial
+			  86400		; Refresh
+			   3600		; Retry
+			2419200		; Expire
+			  86400 )	; Negative Cache TTL
+;
+; Rellenar
+

@@ -1,0 +1,79 @@
+# coding: utf-8
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+
+  ######################################################################
+  #
+  # Opciones GLOBALES
+  #
+  ######################################################################
+  
+  config.vm.box = "debian/bullseye64"
+  
+  config.vm.provider "virtualbox" do |vb|
+    vb.memory = "256"
+    vb.linked_clone = true
+  end # virtualbox
+
+  # Actualizar SO
+  config.vm.provision "update", type:"shell", inline: <<-SHELL
+    apt-get update 
+  SHELL
+
+  ######################################################################
+  #
+  # Servidor 'atlas'
+  #
+  ######################################################################
+  
+  config.vm.define "atlas" do |atlas|
+    # Poner nombre de hosts
+    
+    # Tarjeta en red interna de atlas
+    
+    # Instalar bind9
+    atlas.vm.provision "bind9-install", type:"shell", inline: <<-SHELL
+        apt-get install -y bind9 bind9-utils bind9-doc
+    SHELL
+
+    # Copiar ficheros configuración 
+    
+    atlas.vm.provision "config", type:"shell", inline: <<-SHELL
+      cp -v /vagrant/resolv.conf /etc/
+      # Copiar resto ficheros
+      systemctl restart bind9
+      systemctl status bind9
+    SHELL
+
+  end # servidor
+
+  ######################################################################
+  #
+  # Servidor 'ceo'
+  #
+  ######################################################################
+  
+  config.vm.define "ceo" do |ceo|
+    # Poner nombre de host
+    
+    # Tarjeta en red interna de ceo
+    
+    # Instalar bind9
+    ceo.vm.provision "bind9-install", type:"shell", inline: <<-SHELL
+        apt-get install -y bind9 bind9-utils bind9-doc
+    SHELL
+
+    # Copiar ficheros configuración 
+    
+    ceo.vm.provision "config", type:"shell", inline: <<-SHELL
+      cp -v /vagrant/resolv.conf /etc/
+      # Copiar resto ficheros
+      systemctl restart bind9
+      systemctl status bind9
+    SHELL
+
+  end # servidor
+
+end # Configure

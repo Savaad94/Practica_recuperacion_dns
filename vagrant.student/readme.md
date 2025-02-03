@@ -219,3 +219,54 @@ ls -l /var/cache/bind/
 
 Si aparecen los archivos db.olimpo y db.olimpo.rev, significa que la transferencia ha funcionado.
 
+# 4. Configurar el responsable de los servidores y los tiempos de refresco
+En este paso, nos aseguramos de que el responsable de los servidores sea hefestos@olimpo.test y configuramos los tiempos de refresco y reintento en los archivos de zona.
+
+## 4.1 Modificar los archivos de zona en atlas
+Abrimos el archivo de zona directa:
+
+```bash
+sudo nano /etc/bind/db.olimpo
+```
+
+Nos aseguramos de que el bloque SOA tenga los valores correctos:
+
+```bash
+@   IN  SOA atlas. hefestos.olimpo.test. (
+        2        ; Serial
+        1200     ; Refresh (20 min)
+        900      ; Retry (15 min)
+        2419200  ; Expire
+        86400    ; Negative Cache TTL
+)
+```
+
+Hacemos lo mismo en la zona inversa:
+
+```bash
+sudo nano /etc/bind/db.olimpo.rev
+```
+
+Nos aseguramos de actualizar el número de serie y guardamos los cambios.
+
+## 4.2 Recargar BIND y verificar
+Después de modificar los archivos, reiniciamos BIND en atlas:
+
+```bash
+sudo systemctl restart bind9
+```
+
+Para asegurarnos de que ceo recibe la actualización, ejecutamos en ceo:
+
+```bash
+sudo rndc retransfer olimpo.test
+sudo rndc reload
+```
+
+Luego verificamos si la actualización se ha propagado correctamente:
+
+```bash
+dig @192.168.56.11 SOA olimpo.test
+```
+
+Si el número de serie mostrado coincide con el de atlas, la configuración se ha aplicado correctamente.

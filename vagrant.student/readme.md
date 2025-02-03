@@ -77,7 +77,7 @@ En este paso, se han asignado las direcciones IP a los servidores:
 
     Atlas: 192.168.56.10
     Ceo: 192.168.56.11
-    
+
 Para asegurarnos de que todo está bien, hemos comprobado las IPs con:
 
 ```bash
@@ -92,3 +92,130 @@ ip a | grep 192.168.56
 exit
 ```
 Si aparecen las IPs correctas, significa que la configuración está bien hecha.
+
+# 3. Configurar la zona DNS olimpo.test
+En este apartado configuramos la zona DNS olimpo.test para que atlas sea el servidor primario y ceo el secundario. Esto permitirá que atlas gestione los registros y que ceo reciba las actualizaciones de la zona cuando haya cambios.
+
+## 3.1 Configurar las zonas en los servidores
+### 3.1.1 En atlas
+Editamos el archivo de configuración local de BIND:
+
+```bash
+sudo nano /etc/bind/named.conf.local
+```
+
+Añadimos:
+
+```bash
+zone "olimpo.test" {
+    type master;
+    file "/etc/bind/db.olimpo";
+    allow-transfer { 192.168.56.11; };
+    notify yes;
+};
+
+zone "56.168.192.in-addr.arpa" {
+    type master;
+    file "/etc/bind/db.olimpo.rev";
+    allow-transfer { 192.168.56.11; };
+    notify yes;
+};
+```
+Guardamos y cerramos.
+
+### 3.1.2 En ceo
+Abrimos el mismo archivo:
+
+```bash
+
+sudo nano /etc/bind/named.conf.local
+```
+
+Añadimos:
+
+```bash
+zone "olimpo.test" {
+    type slave;
+    file "/var/cache/bind/db.olimpo";
+    masters { 192.168.56.10; };
+};
+
+zone "56.168.192.in-addr.arpa" {
+    type slave;
+    file "/var/cache/bind/db.olimpo.rev";
+    masters { 192.168.56.10; };
+};
+```
+
+Guardamos y cerramos.
+
+## 3.2 Crear los archivos de zona en atlas
+### 3.2.1 Zona directa
+
+```bash
+sudo nano /etc/bind/db.olimpo
+```
+
+y añadimos:
+
+```bash
+$TTL 86400
+@   IN  SOA atlas. hefestos.olimpo.test. (
+        1        ; Serial
+        1200     ; Refresh
+        900      ; Retry
+        2419200  ; Expire
+        86400    ; Negative Cache TTL
+)
+
+@   IN  NS  atlas.olimpo.test.
+atlas   IN  A   192.168.56.10
+ceo     IN  A   192.168.56.11
+```
+
+### 3.2.2 Zona inversa
+```bash
+sudo nano /etc/bind/db.olimpo.rev
+```
+
+```bash
+$TTL 86400
+@   IN  SOA atlas. hefestos.olimpo.test. (
+        1        ; Serial
+        1200     ; Refresh
+        900      ; Retry
+        2419200  ; Expire
+        86400    ; Negative Cache TTL
+)
+
+@   IN  NS  atlas.olimpo.test.
+10  IN  PTR atlas.olimpo.test.
+11  IN  PTR ceo.olimpo.test.
+```
+## 3.3 Reiniciar BIND y comprobar
+### 3.3.1 Reiniciar BIND
+
+En atlas:
+
+```bash
+sudo systemctl restart bind9
+sudo systemctl status bind9
+```
+
+En ceo:
+
+```bash
+sudo systemctl restart bind9
+sudo systemctl status bind9
+```
+
+### 3.3.2 Verificar la transferencia de zona
+
+En ceo:
+
+```bash
+ls -l /var/cache/bind/
+```
+
+Si aparecen los archivos db.olimpo y db.olimpo.rev, significa que la transferencia ha funcionado.
+

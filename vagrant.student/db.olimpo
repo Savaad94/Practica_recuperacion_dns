@@ -1,0 +1,29 @@
+$TTL 86400
+@	IN	SOA atlas. hefestos.olimpo.test. (
+		5	; Serial
+		1200	; Refresh (20 min)
+		900	; Retry (15 min)
+		2419200	; Expire
+		86400	; Negative Cache TTL
+)
+
+; Servidores de nombres
+@	IN	NS	atlas.
+
+; Registros de los servidores
+atlas	IN	A	192.168.56.10
+ceo	IN	A	192.168.56.11
+atenea	IN	A	192.168.56.20
+mercurio IN	A	192.168.56.30
+ares	IN	A	192.168.56.40
+dionnisio IN	A	192.168.56.50
+
+;Servidores de correo (MX)
+@	IN	MX	10 mercurio.olimpo.test.
+@	IN	MX	20 dionisio.olimpo.test.
+
+; Alias (CNAME)
+ftp	IN	CNAME atenea.olimpo.test.
+smtp	IN	CNAME mercurio.olimpo.test.
+pop	IN	CNAME mercurio.olimpo.test.
+www	IN	CNAME ares.olimpo.test.

@@ -1,17 +1,15 @@
-//
-// Do any local configuration here
-//
-
-// Consider adding the 1918 zones here, if they are not used in your
-// organization
-//include "/etc/bind/zones.rfc1918";
-
-// Zona directa
-zone "" {
-    // Rellenar
+//Zona directa
+zone "olimpo.test" {
+	type master;
+	file "/etc/bind/db.olimpo";
+	allow-transfer { 192.168.56.11; }; // Solo permite a ceo recibir la transferencia
+	notify yes;
 };
 
-// Zona inversa
-zone "" {
-     // Rellenar
+//Zona inversa
+zone "56.168.192.in-addr.arpa" {
+	type master;
+	file "/etc/bind/db.olimpo.rev";
+	allow-transfer { 192.168.56.11; };
+	notify yes;
 };

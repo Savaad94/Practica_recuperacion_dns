@@ -1,0 +1,13 @@
+// Zona directa
+zone "olimpo.test" {
+	type slave;
+	file "/var/cache/bind/db.olimpo";
+	masters { 192.168.56.10; };
+};
+
+// Zona inversa
+zone "56.168.192.in-addr.arpa" {
+	type slave;
+	file "/var/cache/bind/db.olimpo.rev";
+	masters { 192.168.56.10; };
+};

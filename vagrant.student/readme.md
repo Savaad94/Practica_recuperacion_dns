@@ -1,8 +1,8 @@
-# Configuración de los Servidores DNS - Apartado 1
+# 1. Configuración de los Servidores DNS
 
 En este apartado configuramos los nombres de los servidores en Vagrant. La idea es que `atlas` y `ceo` tengan sus respectivos nombres de host bien definidos desde el inicio. No es complicado, pero hay que hacerlo bien para evitar problemas después.
 
-## 1️ Configurar los nombres de los servidores en Vagrant
+## 1️.1 Configurar los nombres de los servidores en Vagrant
 
 Para que cada servidor tenga su nombre de host correcto, editamos el archivo `Vagrantfile` y añadimos lo siguiente:
 
@@ -46,7 +46,7 @@ Vagrant.configure("2") do |config|
 end
 ```
 
-## 2️ Iniciar las máquinas virtuales
+## 1.2️ Iniciar las máquinas virtuales
 
 Después de modificar el Vagrantfile, ejecutamos:
 
@@ -60,7 +60,7 @@ Si ya estaban encendidas, mejor reiniciarlas para que cojan bien los cambios:
 vagrant reload --provision
 ```
 
-## 3 Comprobar que los nombres están bien asignados
+## 1.3 Comprobar que los nombres están bien asignados
 
 Para asegurarnos de que cada máquina tiene su nombre de host correcto, nos conectamos a cada una y ejecutamos:
 
@@ -71,3 +71,24 @@ exit
 ```
 
 Si en cada caso aparece el nombre correcto (atlas o ceo), significa que todo está bien configurado.
+
+# 2. Configurar la dirección IP de atlas y ceo
+En este paso, se han asignado las direcciones IP a los servidores:
+
+    Atlas: 192.168.56.10
+    Ceo: 192.168.56.11
+    
+Para asegurarnos de que todo está bien, hemos comprobado las IPs con:
+
+```bash
+vagrant ssh atlas
+ip a | grep 192.168.56
+exit
+```
+
+```bash
+vagrant ssh ceo
+ip a | grep 192.168.56
+exit
+```
+Si aparecen las IPs correctas, significa que la configuración está bien hecha.
